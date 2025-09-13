@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    /* File Layout */
+    "rootDir": "./src",          // Where your TypeScript source files are
+    "outDir": "./dist",          // Where compiled JavaScript will go
+
+    /* Module & Environment */
+    "target": "ES6",             // Compiles to ES6 JavaScript
+    "module": "commonjs",        // Node.js uses CommonJS modules
+    "esModuleInterop": true,     // Makes `import express from "express"` work
+    "moduleResolution": "node",  // Ensures proper resolution of node modules
+
+    /* Node Types */
+    "lib": ["esnext"],           // Latest JS features
+    "types": ["node"],           // Include Node.js type definitions
+
+    /* Type Checking */
+    "strict": true,              // Enables all strict type checks
+    "skipLibCheck": true,        // Skips type checking in node_modules
+    "noImplicitAny": true,       // Avoids accidental `any` types
+
+    /* Debugging */
+    "sourceMap": true            // Allows debugging in TS
+  },
+  "include": ["src"],            // Compile everything in src/
+  "exclude": ["node_modules"]    // Ignore node_modules
+}
