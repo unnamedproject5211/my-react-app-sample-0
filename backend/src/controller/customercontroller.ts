@@ -64,3 +64,37 @@ export const getCustomerByCustomerId = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+/**
+ * Update customer by customerId
+ */
+export const updateCustomer = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // id = customerId
+    const updates = req.body;
+
+    // recalculate counts if arrays provided
+    if (updates.healthDetails && Array.isArray(updates.healthDetails)) {
+      updates.healthCount = updates.healthDetails.length;
+    }
+    if (updates.vehicles && Array.isArray(updates.vehicles)) {
+      updates.vehicleCount = updates.vehicles.length;
+    }
+
+    const updated = await Customer.findOneAndUpdate(
+      { customerId: id },    // find by customerId
+      { $set: updates },     // update fields
+      { new: true }          // return updated doc
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    return res.json(updated);
+  } catch (err: any) {
+    console.error("updateCustomer error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+

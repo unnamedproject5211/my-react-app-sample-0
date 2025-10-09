@@ -43,7 +43,7 @@ const HomePage: React.FC = () => {
             </button>
           </li>
           <li>
-            <button onClick={()=> navigate("exp-policy")}>
+            <button onClick={()=> navigate("/exp-policy")}>
             Task
             </button>
           </li>
@@ -119,8 +119,9 @@ const HomePage: React.FC = () => {
                       </td>
                       <td>{cust.source}</td>
                       <td>
-                        <button className="view-btn">👁️</button>
-                        <button className="edit-btn">✏️</button>
+                        <button className="view-btn" >👁️</button>
+                        <button 
+                        className="edit-btn" onClick={() => navigate(`/edit/${cust.customerId}`)}>✏️</button>
                       </td>
                     </tr>
                   ))}

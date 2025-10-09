@@ -1,6 +1,6 @@
 // src/routes/customerRoutes.ts
 import { Router } from "express";
-import { createCustomer, getCustomers, getCustomerByCustomerId } from "../controller/customercontroller";
+import { createCustomer, getCustomers, getCustomerByCustomerId ,updateCustomer } from "../controller/customercontroller";
 
 const router = Router();
 
@@ -12,5 +12,8 @@ router.get("/", getCustomers);
 
 // GET /api/customers/:id -> get by customerId
 router.get("/:id", getCustomerByCustomerId);
+
+// PUT /api/customers/:id -> update the customer by id
+router.put("/:id",updateCustomer);
 
 export default router;

@@ -48,11 +48,15 @@ type ContextType = {
   customers: CustomerData[];
   loading: boolean;
   refresh: () => Promise<void>;
+  getCustomerById: (id: string) => Promise<CustomerData | null>;
+  updateCustomer: (id: string, data: Partial<CustomerData>) => Promise<void>;
 };
 
 const CustomersContext = createContext<ContextType | undefined>(undefined);
 
-export const CustomersProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CustomersProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,12 +72,38 @@ export const CustomersProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  // 🔹 Fetch single customer by ID (uses your backend controller)
+  const getCustomerById = async (id: string): Promise<CustomerData | null> => {
+    try {
+      const res = await Axios.get(`/api/customers/${id}`);
+      return res.data;
+    } catch (err) {
+      console.error("Failed to fetch customer:", err);
+      return null;
+    }
+  };
+
+  // 🔹 Update customer (PUT or PATCH)
+  const updateCustomer = async (
+    id: string,
+    data: Partial<CustomerData>
+  ): Promise<void> => {
+    try {
+      await Axios.put(`/api/customers/${id}`, data);
+      await fetchCustomers(); // refresh list
+    } catch (err) {
+      console.error("Failed to update customer:", err);
+    }
+  };
+
   useEffect(() => {
     fetchCustomers();
   }, []);
 
   return (
-    <CustomersContext.Provider value={{ customers, loading, refresh: fetchCustomers }}>
+    <CustomersContext.Provider
+      value={{ customers, loading, refresh: fetchCustomers, getCustomerById, updateCustomer }}
+    >
       {children}
     </CustomersContext.Provider>
   );
@@ -82,6 +112,7 @@ export const CustomersProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 // Hook
 export function useCustomers() {
   const ctx = useContext(CustomersContext);
-  if (!ctx) throw new Error("useCustomers must be used within CustomersProvider");
+  if (!ctx)
+    throw new Error("useCustomers must be used within CustomersProvider");
   return ctx;
 }
