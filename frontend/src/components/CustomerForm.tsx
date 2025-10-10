@@ -127,7 +127,7 @@ const handleHealthDetailChange = (
   // Handle vehicle count change
   const handleVehicleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const count = parseInt(e.target.value) || 0;
-    const vehicles = Array.from({ length: count }, (_,i) => ({
+    const vehicles = Array.from({ length: count }, () => ({
       vehicleNo: "",
       policyCompany: "",
       policyExpiry: "",
