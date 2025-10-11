@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCustomers } from "../context/CustomersContext"; // ⬅️ use context instead of Axios
-import "./HomePage.css";
+import "./Homepage.css";
 
 // --- Component ---
 const HomePage: React.FC = () => {
