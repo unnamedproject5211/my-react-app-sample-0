@@ -1,7 +1,7 @@
 // src/pages/ExpiringPoliciesPage.tsx
 import React, { useMemo } from "react";
 import { useCustomers } from "../context/CustomersContext";
-import { isExpiringSoon } from "../utils/dateutils";
+import  { isExpiringSoon } from "../utils/dateUtils";
 import "./ExpiringPoliciesPage.css";
 
 const ExpiringPoliciesPage: React.FC = () => {
