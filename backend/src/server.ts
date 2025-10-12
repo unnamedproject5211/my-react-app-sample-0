@@ -19,6 +19,8 @@ exp.use(
     credentials: true,
   })
 );
+// ✅ allow preflight (OPTIONS) requests for all routes
+exp.options("*", cors());
 exp.use(express.json());
 
 //routes
