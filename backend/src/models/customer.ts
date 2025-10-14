@@ -1,6 +1,7 @@
 // src/models/Customer.ts
 import mongoose, { Document, Schema } from "mongoose";
 
+// --- Interfaces ---
 interface VehicleDetails {
   vehicleNo: string;
   policyCompany: string;
@@ -14,6 +15,8 @@ interface HealthDetails {
 }
 
 export interface ICustomer extends Document {
+  userId: mongoose.Schema.Types.ObjectId; // ✅ link to the User who owns this customer
+
   customerId: string;
   customerType: string;
   customerName: string;
@@ -43,6 +46,7 @@ export interface ICustomer extends Document {
   updatedAt: Date;
 }
 
+// --- Subschemas ---
 const VehicleSchema = new Schema<VehicleDetails>(
   {
     vehicleNo: { type: String, default: "" },
@@ -61,10 +65,17 @@ const HealthSchema = new Schema<HealthDetails>(
   { _id: false }
 );
 
+// --- Main Customer Schema ---
 const CustomerSchema = new Schema<ICustomer>(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true, // ✅ ensures every customer belongs to a user
+    },
+
     customerId: { type: String, required: true, index: true, unique: true },
-    customerType: { type: String, required: true},
+    customerType: { type: String, required: true },
     customerName: { type: String },
     mobile: { type: String },
     dob: { type: String },
@@ -86,10 +97,11 @@ const CustomerSchema = new Schema<ICustomer>(
     smeDetails: { type: String, default: "" },
 
     loansSelected: { type: Boolean, default: false },
-    loanDetails: { type: String, default: "" }
+    loanDetails: { type: String, default: "" },
   },
   { timestamps: true }
 );
 
+// --- Model Export ---
 export default mongoose.models.Customer ||
   mongoose.model<ICustomer>("Customer", CustomerSchema);

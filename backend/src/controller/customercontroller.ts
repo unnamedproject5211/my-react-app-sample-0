@@ -3,33 +3,41 @@ import { Request, Response } from "express";
 import Customer from "../models/customer";
 
 /**
- * Create a new customer document in MongoDB
+ * ✅ Create a new customer document linked to the logged-in user
  */
 export const createCustomer = async (req: Request, res: Response) => {
   try {
-    // Request body should match your frontend structure
+    // Ensure userId is available from authMiddleware
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized: No user ID found" });
+    }
+
     const payload = req.body;
 
-    // Basic server-side validation (expand as needed)
+    // Basic validation
     if (!payload.customerId || !payload.customerName) {
-      return res.status(400).json({ message: "customerId and customerName required" });
+      return res.status(400).json({ message: "customerId and customerName are required" });
     }
 
-    // Optionally sanitize/transform fields (e.g. ensure counts match array lengths)
-    if (payload.healthCount && Array.isArray(payload.healthDetails)) {
+    // Recalculate counts
+    if (Array.isArray(payload.healthDetails)) {
       payload.healthCount = payload.healthDetails.length;
     }
-    if (payload.vehicleCount && Array.isArray(payload.vehicles)) {
+    if (Array.isArray(payload.vehicles)) {
       payload.vehicleCount = payload.vehicles.length;
     }
 
-    // Create & save
-    const customer = new Customer(payload);
+    // ✅ Attach logged-in user's ID
+    const customer = new Customer({
+      ...payload,
+      userId,
+    });
+
     const saved = await customer.save();
     return res.status(201).json(saved);
   } catch (err: any) {
     console.error("createCustomer error:", err);
-    // handle duplicate key error for unique customerId
     if (err.code === 11000) {
       return res.status(409).json({ message: "Duplicate customerId" });
     }
@@ -38,11 +46,17 @@ export const createCustomer = async (req: Request, res: Response) => {
 };
 
 /**
- * Get all customers (simple)
+ * ✅ Get all customers belonging to the logged-in user
  */
-export const getCustomers = async (_req: Request, res: Response) => {
+export const getCustomers = async (req: Request, res: Response) => {
   try {
-    const customers = await Customer.find().sort({ createdAt: -1 }).limit(100);
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized: No user ID found" });
+    }
+
+    // ✅ Fetch only customers created by this user
+    const customers = await Customer.find({ userId }).sort({ createdAt: -1 }).limit(100);
     return res.json(customers);
   } catch (err: any) {
     console.error("getCustomers error:", err);
@@ -51,13 +65,16 @@ export const getCustomers = async (_req: Request, res: Response) => {
 };
 
 /**
- * Get single customer by id (customerId)
+ * ✅ Get a single customer by customerId (only if it belongs to the logged-in user)
  */
 export const getCustomerByCustomerId = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // id is customerId
-    const customer = await Customer.findOne({ customerId: id });
-    if (!customer) return res.status(404).json({ message: "Not found" });
+    const userId = req.userId;
+    const { id } = req.params; // id = customerId
+
+    const customer = await Customer.findOne({ customerId: id, userId });
+    if (!customer) return res.status(404).json({ message: "Customer not found or unauthorized" });
+
     return res.json(customer);
   } catch (err: any) {
     console.error("getCustomerByCustomerId error:", err);
@@ -66,29 +83,30 @@ export const getCustomerByCustomerId = async (req: Request, res: Response) => {
 };
 
 /**
- * Update customer by customerId
+ * ✅ Update customer by customerId (only if owned by the logged-in user)
  */
 export const updateCustomer = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // id = customerId
+    const userId = req.userId;
+    const { id } = req.params;
     const updates = req.body;
 
-    // recalculate counts if arrays provided
-    if (updates.healthDetails && Array.isArray(updates.healthDetails)) {
+    if (Array.isArray(updates.healthDetails)) {
       updates.healthCount = updates.healthDetails.length;
     }
-    if (updates.vehicles && Array.isArray(updates.vehicles)) {
+    if (Array.isArray(updates.vehicles)) {
       updates.vehicleCount = updates.vehicles.length;
     }
 
+    // ✅ Update only if this customer's userId matches the logged-in user
     const updated = await Customer.findOneAndUpdate(
-      { customerId: id },    // find by customerId
-      { $set: updates },     // update fields
-      { new: true }          // return updated doc
+      { customerId: id, userId },
+      { $set: updates },
+      { new: true }
     );
 
     if (!updated) {
-      return res.status(404).json({ message: "Customer not found" });
+      return res.status(404).json({ message: "Customer not found or unauthorized" });
     }
 
     return res.json(updated);
@@ -97,4 +115,3 @@ export const updateCustomer = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
