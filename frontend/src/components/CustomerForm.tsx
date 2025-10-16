@@ -1,5 +1,6 @@
 import React, { useState, useEffect} from "react";
 import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import "./CustomerForm.css";
 import Axios from "../axios";
 
@@ -45,6 +46,7 @@ interface CustomerData {
 }
 
 const CustomerForm: React.FC = () => {
+  const navigate=useNavigate();
   const [formData, setFormData] = useState<CustomerData>({
     customerId: "",
     customerType: "",
@@ -160,6 +162,7 @@ const handleHealthDetailChange = (
       const res = await Axios.post("/api/customers", formData);
       console.log("Saved:", res.data);
       alert("Customer saved!");
+      navigate("/home")
     } catch (error: any) {
     alert(
       error.response?.data?.message ||
