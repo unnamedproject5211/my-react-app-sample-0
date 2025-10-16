@@ -124,7 +124,7 @@ const EditCustomerPage: React.FC = () => {
       // updateCustomer expects id and (Partial) data — context handles the API call + refresh
       await updateCustomer(formData.customerId, formData);
       alert("Customer updated successfully!");
-      navigate("/");
+      navigate("/home");
     } catch (err) {
       console.error("Update failed:", err);
       alert("Failed to update customer — check console.");
