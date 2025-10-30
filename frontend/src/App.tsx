@@ -5,6 +5,7 @@ import CustomerForm from "./components/CustomerForm";
 import HomePage from "./components/Homepage";
 import ExpiringPoliciesPage from "./components/ExpiringPoliciesPage";
 import EditCustomerPage from "./components/EditCustomerPage";
+import VerifyOtp from "./components/VerifyOtp";
 import { CustomersProvider } from "./context/CustomersContext";
 // Auth pages
 import Login from "./components/Login";
@@ -23,6 +24,7 @@ function App() {
           {/* Public routes */}
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/verify-otp" element={<VerifyOtp/>} />
 
           {/* Protected routes */}
           <Route
