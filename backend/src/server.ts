@@ -14,23 +14,25 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Allow these frontend origins
 const allowedOrigins = [
-  "http://localhost:5173", // local dev
-  "https://my-react-app-sample-0-ilir.vercel.app", // your deployed Vercel frontend
+  "http://localhost:5173",
+  "https://my-react-app-sample-0-ilir.vercel.app",
+  "https://my-react-app-sample-0-ilir-r3smz43ql-unknowns-projects-f86b31c6.vercel.app",
 ];
 
-// ✅ CORS setup (Render + Vercel friendly)
+// Allow all subdomains of vercel.app
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow mobile/postman/no-origin
-      if (allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
         return callback(null, true);
-      } else {
-        console.warn("❌ Blocked by CORS:", origin);
-        return callback(new Error("Not allowed by CORS"));
       }
+      console.warn("❌ Blocked by CORS:", origin);
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
