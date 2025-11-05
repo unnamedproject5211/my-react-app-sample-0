@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express, { Request, Response, NextFunction } from "express";
-import cors from "cors";
+import cors, { CorsOptions } from "cors";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import customerRoutes from "./routes/customerRoutes";
@@ -14,34 +14,37 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://my-react-app-sample-0-ilir.vercel.app",
-  "https://my-react-app-sample-0-ilir-r3smz43ql-unknowns-projects-f86b31c6.vercel.app",
+// ✅ Allowed origins
+const allowedOrigins: string[] = [
+  "http://localhost:5173", // local dev
+  process.env.ALLOWED_ORIGIN || "", // main vercel domain
 ];
 
-// Allow all subdomains of vercel.app
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app")
-      ) {
-        return callback(null, true);
-      }
+// ✅ CORS setup
+const corsOptions: CorsOptions = {
+  origin: (origin, callback) => {
+    // allow if no origin (like Postman) or in allowed list or any subdomain of vercel.app
+    if (
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app")
+    ) {
+      callback(null, true);
+    } else {
       console.warn("❌ Blocked by CORS:", origin);
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-// ✅ Handle preflight (important for Vercel→Render)
-app.options("*", cors());
+// ✅ Apply CORS middleware globally
+app.use(cors(corsOptions));
+
+// ✅ Preflight (important for Vercel → Render)
+app.options("*", cors(corsOptions));
 
 // ✅ Parse JSON
 app.use(express.json());
@@ -50,12 +53,12 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
 
-// ✅ Default root route (optional health check)
+// ✅ Root test route
 app.get("/", (req: Request, res: Response) => {
-  res.send("✅ Backend running successfully!");
+  res.send("✅ Backend running successfully on Render!");
 });
 
-// ✅ Global Error Handler
+// ✅ Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err.message === "Not allowed by CORS") {
     return res.status(403).json({ message: "CORS blocked: origin not allowed" });

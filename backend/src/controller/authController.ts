@@ -50,6 +50,7 @@ export const register = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
+  console.log(req.body);
 };
 
 // ========== VERIFY OTP ==========
