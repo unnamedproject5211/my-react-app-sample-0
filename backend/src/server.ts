@@ -13,11 +13,11 @@ connectDB();
 const exp = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Allowed origins (for both local & deployed frontends)
+// ✅ Allowed origins from environment + defaults
 const allowedOrigins = [
-  "http://localhost:5173", // local frontend
-  "https://my-react-app-sample-0-ilir.vercel.app", // deployed frontend
-];
+  "http://localhost:5173", // local
+  process.env.ALLOWED_ORIGIN, // deployed Vercel frontend
+].filter(Boolean); // remove undefined
 
 // ✅ Reusable CORS options
 const corsOptions: CorsOptions = {
@@ -25,7 +25,8 @@ const corsOptions: CorsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true); // allow
     } else {
-      callback(new Error("Not allowed by CORS")); // block
+      console.log("❌ CORS blocked:", origin);
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true, // allow cookies/tokens
@@ -37,14 +38,14 @@ exp.use(cors(corsOptions));
 // ✅ Handle preflight (OPTIONS) requests for all routes
 exp.options("*", cors(corsOptions));
 
-// ✅ Parse JSON request bodies
+// ✅ Parse JSON
 exp.use(express.json());
 
-// ✅ API routes
+// ✅ Routes
 exp.use("/api/customers", customerRoutes);
 exp.use("/api/auth", authRoutes);
 
-// ✅ Error handler for CORS and others
+// ✅ Error handler
 exp.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err.message === "Not allowed by CORS") {
     return res.status(403).json({ message: "CORS blocked: origin not allowed" });
@@ -53,7 +54,7 @@ exp.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ message: "Internal Server Error" });
 });
 
-// ✅ Start the server
+// ✅ Start
 exp.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
