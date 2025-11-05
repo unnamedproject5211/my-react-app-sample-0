@@ -1,52 +1,60 @@
+// src/server.ts
 import dotenv from "dotenv";
 dotenv.config();
 
 import express, { Request, Response, NextFunction } from "express";
-import cors, { CorsOptions } from "cors";
+import cors from "cors";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import customerRoutes from "./routes/customerRoutes";
 
-// ✅ Connect to MongoDB
+// ✅ Connect MongoDB
 connectDB();
 
-const exp = express();
+const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Allowed origins from environment + defaults
+// ✅ Allow these frontend origins
 const allowedOrigins = [
-  "http://localhost:5173", // local
-  process.env.ALLOWED_ORIGIN, // deployed Vercel frontend
-].filter(Boolean); // remove undefined
+  "http://localhost:5173", // local dev
+  "https://my-react-app-sample-0-ilir.vercel.app", // your deployed Vercel frontend
+];
 
-// ✅ Reusable CORS options
-const corsOptions: CorsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true); // allow
-    } else {
-      console.log("❌ CORS blocked:", origin);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true, // allow cookies/tokens
-};
+// ✅ CORS setup (Render + Vercel friendly)
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow mobile/postman/no-origin
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        console.warn("❌ Blocked by CORS:", origin);
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-// ✅ Apply CORS middleware globally
-exp.use(cors(corsOptions));
-
-// ✅ Handle preflight (OPTIONS) requests for all routes
-exp.options("*", cors(corsOptions));
+// ✅ Handle preflight (important for Vercel→Render)
+app.options("*", cors());
 
 // ✅ Parse JSON
-exp.use(express.json());
+app.use(express.json());
 
 // ✅ Routes
-exp.use("/api/customers", customerRoutes);
-exp.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/customers", customerRoutes);
 
-// ✅ Error handler
-exp.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+// ✅ Default root route (optional health check)
+app.get("/", (req: Request, res: Response) => {
+  res.send("✅ Backend running successfully!");
+});
+
+// ✅ Global Error Handler
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err.message === "Not allowed by CORS") {
     return res.status(403).json({ message: "CORS blocked: origin not allowed" });
   }
@@ -54,7 +62,7 @@ exp.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ message: "Internal Server Error" });
 });
 
-// ✅ Start
-exp.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+// ✅ Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
