@@ -14,6 +14,7 @@ import Register from "./components/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
+    console.log("Vercel ENV Test:", import.meta.env.VITE_BACKEND_URL);
   return (
     <CustomersProvider>
       <Router>
