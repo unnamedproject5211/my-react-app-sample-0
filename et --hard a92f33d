@@ -1,0 +1,37 @@
+[33md69d95b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Removed .env from git tracking
+[33m437d618[m changed the otp email method to brevo
+[33m523b286[m[33m ([m[1;31morigin/main[m[33m)[m try to fix the email e
+[33m5561acb[m try to fix the email errr
+[33ma83340d[m try to fix the email err
+[33mfff02d8[m try to fix the email er
+[33m976cc13[m try to fix the email e
+[33m445aef6[m try to fix 404 errr
+[33mde1142b[m try to fix 404 err
+[33m0813594[m try to fix 404 er
+[33m043a093[m try to fix the errr
+[33m5e74ffb[m try to fix the err
+[33m9611b27[m try to fix the er
+[33me75318c[m try to fix the errr
+[33m62674ce[m try to fix the error
+[33m76e36e0[m try to fix the eroor
+[33m52a0297[m try to fix the 404 error
+[33m0f8de04[m try to fix the 404 error
+[33m9500fe8[m fixed the type check error in node mailer
+[33m624a4ea[m added otp verification
+[33mcf6b655[m make small changes on navigation
+[33mcd890a2[m make small changes on navigation
+[33m521f801[m make small changes on backend
+[33m5233bfd[m added the data fetching according to user
+[33mb787941[m small change on server.ts file
+[33m64840f3[m changed the backend .env file
+[33m0f4e4be[m add a vercel.json file in frontend
+[33ma3cbc21[m changed frontend .env file
+[33m3a3a6af[m changed backend .env file
+[33m7b00f37[m Fix import path casing for Homepage.css
+[33mc712b6c[m Fix import path casing for dateUtils
+[33m1c4bd48[m fixed the vercel after
+[33m459ef77[m fix: tsconfig include -> use src (fix Vercel build TS18003)
+[33m9983608[m front end changes for vercel upload
+[33m7165ef0[m changes done for live deploy
+[33mc1f1fbb[m Added blance code
+[33m8c10727[m Added all project files
