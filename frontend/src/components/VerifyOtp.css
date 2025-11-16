@@ -1,0 +1,92 @@
+/* src/pages/VerifyOtp.css */
+
+.verify-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #cceeff, #b8e0e6);
+  font-family: "Poppins", sans-serif;
+}
+
+.verify-box {
+  background-color: #ffffff;
+  padding: 40px 50px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  width: 360px;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.verify-box h2 {
+  color: #1d4ed8;
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.verify-box p {
+  color: #555;
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+}
+
+.verify-box input {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  margin-bottom: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.verify-box input:focus {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 8px rgba(29, 78, 216, 0.4);
+}
+
+.verify-box button {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.verify-btn {
+  background-color: #1d4ed8;
+  color: white;
+  margin-bottom: 12px;
+}
+
+.verify-btn:hover {
+  background-color: #2563eb;
+}
+
+.resend-btn {
+  background-color: #f3f4f6;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.resend-btn:hover {
+  background-color: #e5e7eb;
+}
+
+/* Simple fade animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
