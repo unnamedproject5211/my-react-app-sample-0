@@ -10,7 +10,7 @@ const router = Router();
 router.post("/", authMiddleware, createCustomer);
 
 // GET /api/customers -> list
-router.get("/",  getCustomers);
+router.get("/", authMiddleware, getCustomers);
 
 // GET /api/customers/:id -> get by customerId
 router.get("/:id", authMiddleware, getCustomerByCustomerId);
