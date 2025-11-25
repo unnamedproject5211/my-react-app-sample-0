@@ -5,13 +5,17 @@ import mongoose, { Document, Schema } from "mongoose";
 interface VehicleDetails {
   vehicleNo: string;
   policyCompany: string;
-  policyExpiry: string;
+  policyExpiry: Date;           // Date type
+  reminderSent?: boolean;       // NEW
+  reminderSentAt?: Date | null; // NEW
 }
 
 interface HealthDetails {
   company: string;
   product: string;
-  expiry: string;
+  expiry: Date;                 // Date type
+  reminderSent?: boolean;       // NEW
+  reminderSentAt?: Date | null; // NEW
 }
 
 export interface ICustomer extends Document {
@@ -51,7 +55,9 @@ const VehicleSchema = new Schema<VehicleDetails>(
   {
     vehicleNo: { type: String, default: "" },
     policyCompany: { type: String, default: "" },
-    policyExpiry: { type: String, default: "" },
+    policyExpiry: { type: Date, default: null },
+    reminderSent: { type: Boolean, default: false },
+    reminderSentAt: { type: Date, default: null },
   },
   { _id: false }
 );
@@ -60,7 +66,9 @@ const HealthSchema = new Schema<HealthDetails>(
   {
     company: { type: String, default: "" },
     product: { type: String, default: "" },
-    expiry: { type: String, default: "" },
+    expiry: { type: Date, default: null },
+    reminderSent: { type: Boolean, default: false },
+    reminderSentAt: { type: Date, default: null },
   },
   { _id: false }
 );

@@ -7,12 +7,16 @@ interface VehicleDetails {
   vehicleNo: string;
   policyCompany: string;
   policyExpiry: string;
+  reminderSent?: boolean;
+  reminderSentAt?: string | null;
 }
 
 interface HealthDetails {
   company: string;
   product: string;
   expiry: string;
+  reminderSent?: boolean;
+  reminderSentAt?: string | null;
 }
 
 export interface CustomerData {

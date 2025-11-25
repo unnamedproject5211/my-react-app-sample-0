@@ -5,6 +5,7 @@
     "outDir": "./dist",          // Where compiled JavaScript will go
 
     /* Module & Environment */
+    "allowJs": true,
     "target": "ES6",             // Compiles to ES6 JavaScript
     "module": "commonjs",        // Node.js uses CommonJS modules
     "esModuleInterop": true,     // Makes `import express from "express"` work
