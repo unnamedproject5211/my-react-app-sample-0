@@ -1,5 +1,4 @@
 // src/utils/updateReminders.js
-import { log } from "node:console";
 import Customer from "../models/customer";
 
 /**

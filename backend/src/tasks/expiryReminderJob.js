@@ -1,8 +1,8 @@
 // tasks/expiryReminderJob.js
 import cron from "node-cron";
-import { findExpiringPolicyItemsGroupedByUser } from "../utils/policyUtils.js";
-import { sendExpiryReminderEmail } from "../utils/emailReminder.ts"; // adjust path
-import { markItemsNotified } from "../utils/updateReminders.js";
+import { findExpiringPolicyItemsGroupedByUser } from "../utils/policyUtils";
+import { sendExpiryReminderEmail } from "../utils/emailReminder"; // adjust path
+import { markItemsNotified } from "../utils/updateReminders";
 
 export function startExpiryReminderJob() {
   // Run daily at 09:00 IST
