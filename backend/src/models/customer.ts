@@ -25,7 +25,7 @@ export interface ICustomer extends Document {
   customerType: string;
   customerName: string;
   mobile: string;
-  dob: string;
+  dob: Date;
   address: string;
   website?: string;
   source?: string;
@@ -86,7 +86,7 @@ const CustomerSchema = new Schema<ICustomer>(
     customerType: { type: String, required: true },
     customerName: { type: String },
     mobile: { type: String },
-    dob: { type: String },
+    dob: { type: Date },
     address: { type: String },
     website: { type: String },
     source: { type: String },

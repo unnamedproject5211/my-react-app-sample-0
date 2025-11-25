@@ -6,7 +6,7 @@ import Axios from "../axios"; // your axios instance
 interface VehicleDetails {
   vehicleNo: string;
   policyCompany: string;
-  policyExpiry: string;
+  policyExpiry: Date;
   reminderSent?: boolean;
   reminderSentAt?: string | null;
 }
@@ -14,7 +14,7 @@ interface VehicleDetails {
 interface HealthDetails {
   company: string;
   product: string;
-  expiry: string;
+  expiry: Date;
   reminderSent?: boolean;
   reminderSentAt?: string | null;
 }
@@ -25,7 +25,7 @@ export interface CustomerData {
   customerType: string;
   customerName: string;
   mobile: string;
-  dob: string;
+  dob: Date;
   address: string;
   website: string;
   source: string;
