@@ -186,7 +186,7 @@ const EditCustomerPage: React.FC = () => {
           <input
             type="date"
             name="dob"
-            value={String(formData.dob).slice(0,10) }
+            value={formData.dob ? new Date(formData.dob).toISOString().slice(0,10): ""}
             onChange={handleChange}
           />
         </div>
