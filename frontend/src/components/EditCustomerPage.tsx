@@ -285,7 +285,7 @@ const EditCustomerPage: React.FC = () => {
                   <input
                     type="date"
                     placeholder="Expiry"
-                    value={detail.expiry}
+                    value={detail.expiry ? new Date(detail.expiry).toISOString().slice(0,10) : ""}
                     onChange={(e) =>
                       handleHealthDetailChange(i, "expiry", e.target.value)
                     }
@@ -341,7 +341,7 @@ const EditCustomerPage: React.FC = () => {
                   <input
                     type="date"
                     placeholder="Policy Expiry"
-                    value={v.policyExpiry}
+                    value={v.policyExpiry ? new Date(v.policyExpiry).toISOString().slice(0,10) : ""}
                     onChange={(e) =>
                       handleVehicleDetailChange(i, "policyExpiry", e.target.value)
                     }
