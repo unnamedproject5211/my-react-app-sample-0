@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import  { useCustomers } from "../context/CustomersContext";
 import type {  CustomerData } from "../context/CustomersContext";
-
 import "./CustomerForm.css";
 
 const EditCustomerPage: React.FC = () => {

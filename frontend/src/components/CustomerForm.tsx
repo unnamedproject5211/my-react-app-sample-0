@@ -8,13 +8,13 @@ import Axios from "../axios";
 interface VehicleDetails {
   vehicleNo: string;
   policyCompany: string;
-  policyExpiry: string;
+  policyExpiry: Date | string;
 }
 
 interface HealthDetails{
   company: string;
   product: string;
-  expiry: string;
+  expiry: Date | string;
 }
  
 interface CustomerData {
@@ -22,7 +22,7 @@ interface CustomerData {
   customerType: string;
   customerName: string;
   mobile: string;
-  dob: string;
+  dob: Date | string;
   address: string;
   website: string;
   source: string;
@@ -235,7 +235,7 @@ const handleHealthDetailChange = (
             type="date"
             id="dob"
             name="dob"
-            value={formData.dob}
+            value={String(formData.dob).slice(0, 10)}
             onChange={handleChange}
             required
           />
@@ -344,7 +344,7 @@ const handleHealthDetailChange = (
                 <input
                   type="date"
                   placeholder="Expiry"
-                  value={detail.expiry}
+                  value={String(detail.expiry).slice(0,10)}
                   onChange={(e) =>
                     handleHealthDetailChange(index, "expiry", e.target.value)
                   }
@@ -353,7 +353,6 @@ const handleHealthDetailChange = (
             ))}
           </div>
         )}
-
 
           <label>
             <input
@@ -395,7 +394,7 @@ const handleHealthDetailChange = (
                   <input
                     type="date"
                     placeholder="Policy Expiry"
-                    value={vehicle.policyExpiry}
+                    value={String(vehicle.policyExpiry).slice(0,10)}
                     onChange={(e) =>
                       handleVehicleDetailChange(index,"policyExpiry",e.target.value)
                     }
