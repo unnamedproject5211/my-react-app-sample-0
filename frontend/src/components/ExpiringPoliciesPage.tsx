@@ -54,7 +54,7 @@ const ExpiringPoliciesPage: React.FC = () => {
                       .filter((h) => isExpiringSoon(h.expiry, daysBefore))
                       .map((h, idx) => (
                         <div key={idx} className="expiring-warning">
-                          Health ({h.company}) – expires {h.expiry}
+                          Health ({h.company}) – expires {h.expiry ? new Date(h.expiry).toISOString().slice(0,10) : ""}
                         </div>
                       ))}
 
@@ -64,7 +64,7 @@ const ExpiringPoliciesPage: React.FC = () => {
                       .filter((v) => isExpiringSoon(v.policyExpiry, daysBefore))
                       .map((v, idx) => (
                         <div key={idx} className="expiring-warning">
-                          Vehicle {v.vehicleNo} ({v.policyCompany}) – expires {v.policyExpiry}
+                          Vehicle {v.vehicleNo} ({v.policyCompany}) – expires {v.policyExpiry ? new Date(v.policyExpiry).toISOString().slice(0,10) : ""}
                         </div>
                       ))}
                 </td>
