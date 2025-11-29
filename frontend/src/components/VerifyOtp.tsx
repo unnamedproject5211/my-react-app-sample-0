@@ -22,7 +22,7 @@ const VerifyOtp: React.FC = () => {
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
       }
-      navigate("/login");
+      navigate("/home");
     } catch (err: any) {
       alert(err.response?.data?.message || "Verification failed");
     }
