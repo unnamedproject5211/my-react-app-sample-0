@@ -12,5 +12,5 @@ export const FileSchema = new Schema<FileMeta>({
   url: { type: String, required: true },
   publicId: { type: String, required: true },
   uploadedAt: { type: Date, default: Date.now },
-  originalName: {type: String } 
+  originalName: {type: String , required: true} 
 });
