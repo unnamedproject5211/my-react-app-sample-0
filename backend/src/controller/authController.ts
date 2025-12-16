@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import validator from "validator";
 import User from "../models/User";
 import { generateOtp, hashOtp } from "../utils/otp";
-import { sendOtpEmail } from "../utils/emailSMTP"; // or smtp version
+import { sendOtpEmail } from "../utils/emailOTP"; // or smtp version
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 const OTP_EXPIRY_MINUTES = 10;

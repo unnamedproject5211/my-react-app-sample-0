@@ -1,25 +1,29 @@
-// src/models/Customer.ts
 import mongoose, { Document, Schema } from "mongoose";
+import { FileMeta, FileSchema } from "./File";    // ⭐ NEW
 
 // --- Interfaces ---
 interface VehicleDetails {
   vehicleNo: string;
   policyCompany: string;
-  policyExpiry: Date;           // Date type
-  reminderSent?: boolean;       // NEW
-  reminderSentAt?: Date | null; // NEW
+  policyExpiry: Date;
+  reminderSent?: boolean;
+  reminderSentAt?: Date | null;
+
+  files: FileMeta[];     // ⭐ NEW
 }
 
 interface HealthDetails {
   company: string;
   product: string;
-  expiry: Date;                 // Date type
-  reminderSent?: boolean;       // NEW
-  reminderSentAt?: Date | null; // NEW
+  expiry: Date;
+  reminderSent?: boolean;
+  reminderSentAt?: Date | null;
+
+  files: FileMeta[];     // ⭐ NEW
 }
 
 export interface ICustomer extends Document {
-  userId: mongoose.Schema.Types.ObjectId; // ✅ link to the User who owns this customer
+  userId: mongoose.Schema.Types.ObjectId;
 
   customerId: string;
   customerType: string;
@@ -58,6 +62,8 @@ const VehicleSchema = new Schema<VehicleDetails>(
     policyExpiry: { type: Date, default: null },
     reminderSent: { type: Boolean, default: false },
     reminderSentAt: { type: Date, default: null },
+
+    files: { type: [FileSchema], default: [] },  // ⭐ NEW
   },
   { _id: false }
 );
@@ -69,17 +75,19 @@ const HealthSchema = new Schema<HealthDetails>(
     expiry: { type: Date, default: null },
     reminderSent: { type: Boolean, default: false },
     reminderSentAt: { type: Date, default: null },
+
+    files: { type: [FileSchema], default: [] }, // ⭐ NEW
   },
   { _id: false }
 );
 
-// --- Main Customer Schema ---
+// --- Main schema ---
 const CustomerSchema = new Schema<ICustomer>(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true, // ✅ ensures every customer belongs to a user
+      required: true,
     },
 
     customerId: { type: String, required: true, index: true, unique: true },
@@ -110,6 +118,5 @@ const CustomerSchema = new Schema<ICustomer>(
   { timestamps: true }
 );
 
-// --- Model Export ---
 export default mongoose.models.Customer ||
   mongoose.model<ICustomer>("Customer", CustomerSchema);

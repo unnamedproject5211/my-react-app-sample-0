@@ -10,9 +10,7 @@ console.log("Using backend baseURL:", baseURL);
 
 const Axios = axios.create({
   baseURL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  
 });
 
 // 🔒 Automatically attach token before every request

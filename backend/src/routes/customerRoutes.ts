@@ -1,13 +1,14 @@
 // src/routes/customerRoutes.ts
 import { Router } from "express";
 import { createCustomer, getCustomers, getCustomerByCustomerId ,updateCustomer } from "../controller/customercontroller";
-import authMiddleware from "../middleware/authMiddleware"; // ✅ import your middleware
+import authMiddleware from "../middleware/authMiddleware"; 
+import {upload} from "../middleware/upload"
 
 
 const router = Router();
 
 // POST /api/customers  -> create
-router.post("/", authMiddleware, createCustomer);
+router.post("/", authMiddleware, upload.any(), createCustomer);
 
 // GET /api/customers -> list
 router.get("/", authMiddleware, getCustomers);

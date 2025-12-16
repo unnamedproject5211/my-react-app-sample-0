@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import  { useCustomers } from "../context/CustomersContext";
 import type {  CustomerData } from "../context/CustomersContext";
-import "./CustomerForm.css";
+import "./EditCustomerPage.css";
+import Axios from "../axios";
 
 const EditCustomerPage: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // customerId in URL
@@ -14,6 +15,9 @@ const EditCustomerPage: React.FC = () => {
 
   const [formData, setFormData] = useState<CustomerData | null>(null);
   const [loading, setLoading] = useState(true);
+
+    // processing state to disable buttons while an operation runs
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Load customer once on mount
   useEffect(() => {
@@ -47,27 +51,28 @@ const EditCustomerPage: React.FC = () => {
   };
 
   // Health count change: preserve existing entries when possible, slice when reducing
-  const handleHealthCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!formData) return;
-    const count = parseInt(e.target.value || "0", 10) || 0;
-    const existing = formData.healthDetails || [];
-    let updated = [...existing];
+  const handleHealthCountChange = (count: number) => {
+  if (!formData) return;
 
-    if (updated.length < count) {
-      updated = [
-        ...updated,
-        ...Array.from({ length: count - updated.length }, () => ({
-          company: "",
-          product: "",
-          expiry: "",
-        })),
-      ];
-    } else {
-      updated = updated.slice(0, count);
+  const safeCount = Math.min(count, 30); // ✅ Limit max value to prevent UI freeze
+
+  const existing = formData.healthDetails || [];
+
+  const updated = Array.from({ length: safeCount }, (_, i) =>
+    existing[i] || {
+      company: "",
+      product: "",
+      expiry: "",
+      files: [],
     }
+  );
 
-    setFormData({ ...formData, healthCount: count, healthDetails: updated });
-  };
+  setFormData({
+    ...formData,
+    healthCount: safeCount,
+    healthDetails: updated,
+  });
+};
 
   const handleHealthDetailChange = (
     index: number,
@@ -80,30 +85,43 @@ const EditCustomerPage: React.FC = () => {
     setFormData({ ...formData, healthDetails: updated });
   };
 
+  const handleDeleteHealthDetail = (index: number) => {
+  if (!formData) return;
+
+  const updated = formData.healthDetails.filter((_, i) => i !== index);
+
+  setFormData({
+    ...formData,
+    healthCount: updated.length,
+    healthDetails: updated,
+  });
+};
+
   // Vehicle count change
-  const handleVehicleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!formData) return;
-    const count = parseInt(e.target.value || "0", 10) || 0;
-    const existing = formData.vehicles || [];
-    let updated = [...existing];
+ const handleVehicleCountChange = (count: number) => {
+  if (!formData) return;
 
-    if (updated.length < count) {
-      updated = [
-        ...updated,
-        ...Array.from({ length: count - updated.length }, () => ({
-          vehicleNo: "",
-          policyCompany: "",
-          policyExpiry: "",
-        })),
-      ];
-    } else {
-      updated = updated.slice(0, count);
+  const safeCount = Math.min(count, 30); // ✅ Limit max value to prevent UI freeze
+
+  const existing = formData.vehicles || [];
+
+  const updated = Array.from({ length: safeCount }, (_, i) =>
+    existing[i] || {
+      vehicleNo: "",
+      policyCompany: "",
+      policyExpiry: "",
+      files: [],
     }
+  );
 
-    setFormData({ ...formData, vehicleCount: count, vehicles: updated });
-  };
-
-  const handleVehicleDetailChange = (
+  setFormData({
+    ...formData,
+    vehicleCount: safeCount,
+    vehicles: updated,
+  });
+};
+  
+ const handleVehicleDetailChange = (
     index: number,
     field: keyof (CustomerData["vehicles"][number]),
     value: string
@@ -113,6 +131,113 @@ const EditCustomerPage: React.FC = () => {
     updated[index] = { ...updated[index], [field]: value };
     setFormData({ ...formData, vehicles: updated });
   };
+
+ const handleDeleteVehicleDetail = (index: number) => {
+  if (!formData) return;
+
+  const updated = formData.vehicles.filter((_, i) => i !== index);
+
+  setFormData({
+    ...formData,
+    vehicleCount: updated.length,
+    vehicles: updated,
+  });
+};
+
+  // ---------------------------
+  // FILE HANDLERS: Upload / Delete / Replace
+  // ---------------------------
+
+  // Upload file to health index
+  const handleUploadHealthFile = async (index: number, file: File | null) => {
+    if (!file || !formData) return;
+    setIsProcessing(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+
+      // POST to your upload endpoint (adjust path if router mounted differently)
+      const res = await Axios.post(`/files/health/${formData.customerId}/${index}`,form);
+      const newFile = res.data.file; // expected DB subdoc with _id, url, originalName
+
+      // Update local state so UI reflects immediately
+      const updated = { ...formData };
+      updated.healthDetails = updated.healthDetails || [];
+      updated.healthDetails[index].files = updated.healthDetails[index].files || [];
+      updated.healthDetails[index].files=[newFile];
+      setFormData(updated);
+    } catch (err: any) {
+      console.error("upload error", err);
+      alert(err?.response?.data?.message || "Upload failed");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Upload file to vehicle index
+  const handleUploadVehicleFile = async (index: number, file: File | null) => {
+    if (!file || !formData) return;
+    setIsProcessing(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+
+      const res = await Axios.post(
+        `/files/vehicle/${formData.customerId}/${index}`,
+        form
+      );
+      const newFile = res.data.file;
+
+      const updated = { ...formData };
+      updated.vehicles = updated.vehicles || [];
+      updated.vehicles[index].files = updated.vehicles[index].files || [];
+      updated.vehicles[index].files= [newFile];
+      setFormData(updated);
+    } catch (err: any) {
+      console.error("upload error", err);
+      alert(err?.response?.data?.message || "Upload failed");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Delete any file (section: "health" | "vehicles")
+  const handleDeleteFile = async (
+  section: "health" | "vehicles",
+  index: number,
+  file: any
+) => {
+  if (!formData) return;
+  if (!confirm("Delete this file?")) return;
+
+  setIsProcessing(true);
+  try {
+    await Axios.delete(
+      `/files/${formData.customerId}/files?section=${section}&index=${index}`
+    );
+
+    // Remove locally
+    const updated = { ...formData };
+    if (section === "health") {
+      updated.healthDetails[index].files =
+        (updated.healthDetails[index].files || []).filter(
+          (f: any) => String(f._id) !== String(file._id)
+        );
+    } else {
+      updated.vehicles[index].files =
+        (updated.vehicles[index].files || []).filter(
+          (f: any) => String(f._id) !== String(file._id)
+        );
+    }
+
+    setFormData(updated);
+  } catch (err) {
+    console.error("delete error", err);
+    alert("Delete failed");
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   // Submit: call context updateCustomer which does PUT + refresh
   const handleSubmit = async (e: React.FormEvent) => {
@@ -250,22 +375,32 @@ const EditCustomerPage: React.FC = () => {
               onChange={handleChange}
             />
             Health
-          </label>
+           </label>
 
           {formData.healthSelected && (
             <div className="sub-section">
               <h4>Health Details</h4>
 
-              <input
-                type="number"
-                name="healthCount"
-                value={formData.healthCount}
-                onChange={handleHealthCountChange}
-                placeholder="Number of Health Policies"
-              />
+              <div className="count-control">
+                
+                <span className="count-display">
+                  {formData.healthCount}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const value = Math.min(10, Number(formData.healthCount) + 1);
+                    handleHealthCountChange(value);
+                  }}
+                >
+                  +
+                </button>
+              </div>
 
               {formData.healthDetails.map((detail, i) => (
                 <div key={i} className="health-box">
+                  <div className="health-row">
                   <input
                     type="text"
                     placeholder="Company"
@@ -273,7 +408,7 @@ const EditCustomerPage: React.FC = () => {
                     onChange={(e) =>
                       handleHealthDetailChange(i, "company", e.target.value)
                     }
-                  />
+                    />
                   <input
                     type="text"
                     placeholder="Product"
@@ -281,7 +416,7 @@ const EditCustomerPage: React.FC = () => {
                     onChange={(e) =>
                       handleHealthDetailChange(i, "product", e.target.value)
                     }
-                  />
+                    />
                   <input
                     type="date"
                     placeholder="Expiry"
@@ -289,12 +424,54 @@ const EditCustomerPage: React.FC = () => {
                     onChange={(e) =>
                       handleHealthDetailChange(i, "expiry", e.target.value)
                     }
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+                    />
+                   <button
+                        type="button"
+                        onClick={() => handleDeleteHealthDetail(i)}
+                        disabled={isProcessing}
+                        className="remove-policy-btn"
+                        >
+                        ✕ Remove
+                      </button>
+                      </div>
+              
+                   {/* Add file input */}
+                  <div className="file-upload-wrapper">
+                    <input
+                      type="file"
+                      onChange={(e) => handleUploadHealthFile(i, e.target.files?.[0] || null)}
+                      disabled={isProcessing}
+                      multiple={false}
+                    />
+                  </div>
+                  {/* ✅ NEW — Show uploaded files */}
+                  {detail.files?.[0] && <p>Uploaded files:</p>}
+                  {detail.files?.[0]&& (
+                    <div className="file-preview-box">
+                        <a
+                          href={detail.files[0].url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="file-link"
+                        >
+                         {detail.files[0].originalName || "File"}
+                        </a>
+                            <button
+                              className="file-remove-btn"
+                              type="button"
+                              onClick={() => handleDeleteFile("health", i, detail.files![0])}
+                              disabled={isProcessing}
+                              aria-label="Remove file"
+                            >
+                              ✕
+                            </button>
+                      </div>        
+                )}
+           </div>
+           ))}
         </div>
+      )}
+    </div>
 
         {/* Motor */}
         <div className="checkbox-group">
@@ -311,17 +488,25 @@ const EditCustomerPage: React.FC = () => {
           {formData.motorSelected && (
             <div className="sub-section">
               <h4>Motor Details</h4>
+              <div className="count-control">
+                <span className="count-display">
+                  {formData.vehicleCount}
+                </span>
 
-              <input
-                type="number"
-                name="vehicleCount"
-                value={formData.vehicleCount}
-                onChange={handleVehicleCountChange}
-                placeholder="Number of Vehicles"
-              />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const value = Math.min(10, Number(formData.vehicleCount) + 1);
+                    handleVehicleCountChange(value);
+                  }}
+                >
+                  +
+                </button>
+                </div>
 
               {formData.vehicles.map((v, i) => (
                 <div key={i} className="vehicle-box">
+                  <div className="health-row">
                   <input
                     type="text"
                     placeholder="Vehicle No"
@@ -329,7 +514,7 @@ const EditCustomerPage: React.FC = () => {
                     onChange={(e) =>
                       handleVehicleDetailChange(i, "vehicleNo", e.target.value)
                     }
-                  />
+                    />
                   <input
                     type="text"
                     placeholder="Policy Company"
@@ -337,7 +522,7 @@ const EditCustomerPage: React.FC = () => {
                     onChange={(e) =>
                       handleVehicleDetailChange(i, "policyCompany", e.target.value)
                     }
-                  />
+                    />
                   <input
                     type="date"
                     placeholder="Policy Expiry"
@@ -345,7 +530,49 @@ const EditCustomerPage: React.FC = () => {
                     onChange={(e) =>
                       handleVehicleDetailChange(i, "policyExpiry", e.target.value)
                     }
-                  />
+                    />
+                  <button
+                        type="button"
+                        onClick={() => handleDeleteVehicleDetail(i)}
+                        disabled={isProcessing}
+                        className="remove-policy-btn"
+                        >
+                        ✕ Remove 
+                  </button>
+                    </div>
+                    {/* Add vehicle file input */}
+                  <div className="file-upload-wrapper">
+                    <input
+                      type="file"
+                      onChange={(e) => handleUploadVehicleFile(i, e.target.files?.[0] || null)}
+                      disabled={isProcessing}
+                    />
+                  </div>
+
+              {v.files?.[0] && <p>Uploaded File:</p>}
+
+                   {/* ✅ NEW — Show uploaded files */}
+              {v.files?.[0] &&  (
+                <div className="file-preview-box">
+                        <a
+                          href={v.files[0].url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="file-link"
+                        >
+                          {v.files[0].originalName || "File"}
+                        </a>
+                            <button
+                              type="button"
+                              className="file-remove-btn"
+                              onClick={() => handleDeleteFile("vehicles", i, v.files![0])}
+                              disabled={isProcessing}
+                              aria-label="Remove file"
+                            >
+                              ✕
+                            </button>
+                </div>
+              )}
                 </div>
               ))}
             </div>
@@ -404,7 +631,7 @@ const EditCustomerPage: React.FC = () => {
 
         <div className="edit-customer-buttons">
           <button type="submit">Save Changes</button>
-          <button type="button" onClick={() => navigate("/")}>
+          <button type="button" onClick={() => navigate("/home")}>
             Cancel
           </button>
         </div>

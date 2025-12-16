@@ -1,62 +1,137 @@
 // src/controllers/customerController.ts
 import { Request, Response } from "express";
 import Customer from "../models/customer";
-
+import { uploadToCloudinary } from "../utils/cloudinaryUploader";
+import type { ICustomer } from "../models/customer"
+import type { FileMeta } from "../models/File";        // type-only import
+import type { Document } from "mongoose";
 /**
- * ✅ Create a new customer document linked to the logged-in user
+ * Create new customer with file uploads (Health + Motor)
  */
 export const createCustomer = async (req: Request, res: Response) => {
+   // ---- DEBUG LOGS ----
+    console.log("🟩 DEBUG START ---------------------------");
+    console.log("Headers:", req.headers["content-type"]);
+    console.log("Is multipart? →", req.headers["content-type"]?.includes("multipart/form-data"));
+    console.log("Body keys:", Object.keys(req.body));
+    console.log("Files:", req.files);
+    console.log("🟩 DEBUG END -----------------------------");
+    // ---------------------
   try {
-    // Ensure userId is available from authMiddleware
     const userId = req.userId;
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized: No user ID found" });
     }
 
-    const payload = req.body;
+    console.log("📥 Received request body keys:", Object.keys(req.body));
+    console.log("📥 customerData field:", req.body.customerData);
+    console.log("📁 Files received:", req.files);
 
-    // Basic validation
-    if (!payload.customerId || !payload.customerName) {
-      return res.status(400).json({ message: "customerId and customerName are required" });
+     // ✅ Validate customerData exists
+    if (!req.body.customerData) {
+      return res.status(400).json({ 
+        message: "Missing customerData in request",
+        receivedFields: Object.keys(req.body)
+      });
+    }
+     // Parse the customer data from request body
+    let payload;
+    try {
+      payload = JSON.parse(req.body.customerData);
+    } catch (parseError: any) {
+      console.error("❌ JSON parse error:", parseError);
+      return res.status(400).json({ 
+        message: "Invalid JSON in customerData",
+        error: parseError.message,
+        receivedData: req.body.customerData
+      });
     }
 
-    // Recalculate counts
-    if (Array.isArray(payload.healthDetails)) {
-      payload.healthCount = payload.healthDetails.length;
-    }
-    if (Array.isArray(payload.vehicles)) {
-      payload.vehicleCount = payload.vehicles.length;
+    console.log("✅ Parsed payload:", payload);
+
+    // Cast req.files as Express.Multer.File[]
+    const files = req.files as Express.Multer.File[] | undefined;
+
+    // -----------------------------
+    // 🔵 Upload HEALTH files
+    // -----------------------------
+    if (payload.healthDetails?.length > 0) {
+      payload.healthDetails = await Promise.all(
+        payload.healthDetails.map(async (item: any, index: number) => {
+          const matchingFiles = (files || []).filter(
+            (f) => f.fieldname === `health_${index}`
+          );
+
+          const uploads = await Promise.all(
+            matchingFiles.map((file) => uploadToCloudinary(file))
+            
+          );
+
+          return {
+            ...item,
+            files: uploads,
+          };
+        })
+      );
     }
 
-    // ✅ Attach logged-in user's ID
-    const customer = new Customer({
+    // -----------------------------
+    // 🔵 Upload VEHICLE files
+    // -----------------------------
+    if (payload.vehicles?.length > 0) {
+      payload.vehicles = await Promise.all(
+        payload.vehicles.map(async (item: any, index: number) => {
+          const matchingFiles = (files || []).filter(
+            (f) => f.fieldname === `vehicle_${index}`
+          );
+           // Log each file before upload
+      matchingFiles.forEach((file) => {
+        console.log("Uploading VEHICLE file to Cloudinary:", file.originalname);
+      });
+
+          const uploads = await Promise.all(
+            matchingFiles.map((file) => uploadToCloudinary(file))
+
+          );
+          
+
+          return {
+            ...item,
+            files: uploads,
+            
+          };
+        })
+      );
+    }
+
+    // Auto counts
+    payload.healthCount = payload.healthDetails?.length || 0;
+    payload.vehicleCount = payload.vehicles?.length || 0;
+
+    // Create customer in DB
+    const newCustomer = await Customer.create({
       ...payload,
       userId,
     });
 
-    const saved = await customer.save();
-    return res.status(201).json(saved);
+    return res.status(201).json(newCustomer);
   } catch (err: any) {
     console.error("createCustomer error:", err);
-    if (err.code === 11000) {
-      return res.status(409).json({ message: "Duplicate customerId" });
-    }
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
 /**
- * ✅ Get all customers belonging to the logged-in user
+ * Get all customers
  */
+
 export const getCustomers = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: No user ID found" });
-    }
+    const customers = await Customer.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(200);
 
-    // ✅ Fetch only customers created by this user
-    const customers = await Customer.find({ userId }).sort({ createdAt: -1 }).limit(100);
     return res.json(customers);
   } catch (err: any) {
     console.error("getCustomers error:", err);
@@ -65,40 +140,115 @@ export const getCustomers = async (req: Request, res: Response) => {
 };
 
 /**
- * ✅ Get a single customer by customerId (only if it belongs to the logged-in user)
+ * Get customer by ID
  */
+type LeanICustomer = Omit<ICustomer, keyof Document>;
+type HealthDetail = LeanICustomer['healthDetails'] extends Array<infer U> ? U : any;
+type VehicleDetail = LeanICustomer['vehicles'] extends Array<infer U> ? U : any;
+//If healthDetails is an array of something,then take the type of one item inside the array ,
+// otherwise use any.
+
 export const getCustomerByCustomerId = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
-    const { id } = req.params; // id = customerId
+    const { id } = req.params;
 
-    const customer = await Customer.findOne({ customerId: id, userId });
-    if (!customer) return res.status(404).json({ message: "Customer not found or unauthorized" });
+    // use lean() to get a plain JS object and type it
+    const customer = (await Customer.findOne({ customerId: id, userId }).lean()) as LeanICustomer | null;
+
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found or unauthorized" });
+    }
+
+    // DEBUG raw
+    console.log("DEBUG — raw customer (lean):", JSON.stringify(customer, null, 2));
+
+    // Normalize nested files while preserving types
+    if (customer.healthDetails) {
+      customer.healthDetails = customer.healthDetails.map((h: HealthDetail) => ({
+        ...h,
+        files: (h.files || []).map((f: FileMeta) => ({
+          url: f.url,
+          publicId: f.publicId,
+          originalName: f.originalName,
+          uploadedAt: f.uploadedAt,
+          _id: f._id,
+        })),
+      }));
+    }
+
+    if (customer.vehicles) {
+      customer.vehicles = customer.vehicles.map((v: VehicleDetail) => ({
+        ...v,
+        files: (v.files || []).map((f: FileMeta) => ({
+          url: f.url,
+          publicId: f.publicId,
+          originalName: f.originalName,
+          uploadedAt: f.uploadedAt,
+          _id: f._id,
+        })),
+      }));
+    }
+
+    // DEBUG final
+    console.log("DEBUG — normalized healthDetails:", JSON.stringify(customer.healthDetails, null, 2));
 
     return res.json(customer);
   } catch (err: any) {
     console.error("getCustomerByCustomerId error:", err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res.status(500).json({ message: "Server error", error: err.message || err });
   }
 };
 
+
 /**
- * ✅ Update customer by customerId (only if owned by the logged-in user)
+ * Update customer (no file upload here)
  */
 export const updateCustomer = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
     const { id } = req.params;
+
     const updates = req.body;
 
-    if (Array.isArray(updates.healthDetails)) {
-      updates.healthCount = updates.healthDetails.length;
-    }
-    if (Array.isArray(updates.vehicles)) {
-      updates.vehicleCount = updates.vehicles.length;
+    updates.healthCount = updates.healthDetails?.length || 0;
+    updates.vehicleCount = updates.vehicles?.length || 0;
+
+    // ✅ Preserve existing files if frontend didn’t send new ones
+    // new
+    const existing = await Customer.findOne({ customerId: id, userId });
+
+    if (!existing) {
+      return res
+        .status(404)
+        .json({ message: "Customer not found or unauthorized" });
     }
 
-    // ✅ Update only if this customer's userId matches the logged-in user
+    // merge file data
+    const mergeFiles = (oldArr: any[], newArr: any[]) =>
+      newArr.map((item: any, index: number) => ({
+        ...item,
+        files:
+          item.files && item.files.length
+            ? item.files
+            : oldArr?.[index]?.files || [],
+      }));
+
+    if (updates.healthDetails) {
+      updates.healthDetails = mergeFiles(
+        existing.healthDetails,
+        updates.healthDetails
+      );
+    }
+
+    if (updates.vehicles) {
+      updates.vehicles = mergeFiles(
+        existing.vehicles,
+        updates.vehicles
+      );
+    }
+    // end new
+
     const updated = await Customer.findOneAndUpdate(
       { customerId: id, userId },
       { $set: updates },
@@ -106,7 +256,9 @@ export const updateCustomer = async (req: Request, res: Response) => {
     );
 
     if (!updated) {
-      return res.status(404).json({ message: "Customer not found or unauthorized" });
+      return res
+        .status(404)
+        .json({ message: "Customer not found or unauthorized" });
     }
 
     return res.json(updated);

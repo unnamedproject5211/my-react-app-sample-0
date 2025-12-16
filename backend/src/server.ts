@@ -7,6 +7,7 @@ import cors, { CorsOptions } from "cors";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import customerRoutes from "./routes/customerRoutes";
+import customerFileRoutes from "./routes/customerFileRoutes";
 import {startExpiryReminderJob} from "./tasks/expiryReminderJob";
 
 
@@ -55,7 +56,7 @@ app.use(express.json());
 // ✅ Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
-
+app.use("/files", customerFileRoutes);
 
 if (process.env.NODE_ENV === "production") {
   console.log("🕒 Running expiry reminder cron locally...");

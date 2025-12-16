@@ -3,12 +3,21 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import Axios from "../axios"; // your axios instance
 
 // ---- Interfaces ----
+interface FileMeta {
+  url: string;
+  publicId: string;
+  uploadedAt: string;
+  originalName:string;
+}
+
 interface VehicleDetails {
   vehicleNo: string;
   policyCompany: string;
   policyExpiry: string;
   reminderSent?: boolean;
   reminderSentAt?: string | null;
+  files: FileMeta[];   // ✅ NEW
+
 }
 
 interface HealthDetails {
@@ -17,6 +26,8 @@ interface HealthDetails {
   expiry: string;
   reminderSent?: boolean;
   reminderSentAt?: string | null;
+  files: FileMeta[];   // ✅ NEW
+
 }
 
 export interface CustomerData {

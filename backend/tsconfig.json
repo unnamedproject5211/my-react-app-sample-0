@@ -1,28 +1,40 @@
 {
   "compilerOptions": {
     /* File Layout */
-    "rootDir": "./src",          // Where your TypeScript source files are
-    "outDir": "./dist",          // Where compiled JavaScript will go
+    "rootDir": "./src",
+    "outDir": "./dist",
 
     /* Module & Environment */
     "allowJs": true,
-    "target": "ES6",             // Compiles to ES6 JavaScript
-    "module": "commonjs",        // Node.js uses CommonJS modules
-    "esModuleInterop": true,     // Makes `import express from "express"` work
-    "moduleResolution": "node",  // Ensures proper resolution of node modules
+    "target": "ES6",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
 
     /* Node Types */
-    "lib": ["esnext"],           // Latest JS features
-    "types": ["node"],           // Include Node.js type definitions
+    "lib": ["esnext"],
+    "types": ["node", "multer"],  // ✅ Add multer here
+    "typeRoots": [
+      "./src/@types",
+      "./node_modules/@types"
+    ],
 
     /* Type Checking */
-    "strict": true,              // Enables all strict type checks
-    "skipLibCheck": true,        // Skips type checking in node_modules
-    "noImplicitAny": true,       // Avoids accidental `any` types
+    "strict": true,
+    "skipLibCheck": true,
+    "noImplicitAny": true,
 
     /* Debugging */
-    "sourceMap": true            // Allows debugging in TS
+    "sourceMap": true
   },
-  "include": ["src"],            // Compile everything in src/
-  "exclude": ["node_modules"]    // Ignore node_modules
+
+  "include": [
+    "src/**/*"
+  ],
+
+  "exclude": ["node_modules"],
+
+  "ts-node": {
+    "files": true  // ✅ This forces ts-node to respect typeRoots
+  }
 }

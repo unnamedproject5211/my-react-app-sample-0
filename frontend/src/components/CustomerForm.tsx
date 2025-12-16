@@ -46,7 +46,9 @@ interface CustomerData {
 }
 
 const CustomerForm: React.FC = () => {
-  const navigate=useNavigate();
+
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState<CustomerData>({
     customerId: "",
     customerType: "",
@@ -74,6 +76,10 @@ const CustomerForm: React.FC = () => {
     loansSelected: false,
     loanDetails: "",
   });
+
+  // ⭐ NEW — store files for each policy
+  const [healthFiles, setHealthFiles] = useState<Record<number, File[]>>({});
+  const [vehicleFiles, setVehicleFiles] = useState<Record<number, File[]>>({});
 
   // Auto-generate Customer ID when component mounts
   useEffect(() => {
@@ -125,6 +131,19 @@ const handleHealthDetailChange = (
   }));
 };
 
+// ⭐ NEW — handle health file uploads
+  const handleHealthFileChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    setHealthFiles((prev) => ({
+      ...prev,
+      [index]: Array.from(files),
+    }));
+  };
 
   // Handle vehicle count change
   const handleVehicleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,22 +174,94 @@ const handleHealthDetailChange = (
     }));
   };
 
-  // Handle form submit
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    try { 
-      const res = await Axios.post("/api/customers", formData);
-      console.log("Saved:", res.data);
-      alert("Customer saved!");
-      navigate("/home")
-    } catch (error: any) {
-    alert(
-      error.response?.data?.message ||
-      "Error occurred while saving customer data"
-    );
-  }
+   // ⭐ NEW — handle vehicle file uploads
+  const handleVehicleFileChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    setVehicleFiles((prev) => ({
+      ...prev,
+      [index]: Array.from(files),
+    }));
   };
 
+  // ------------------------------------------------------
+  // SUBMIT — SEND JSON + FILES USING FormData
+  // ------------------------------------------------------
+ // Handle form submit
+const handleSubmit = async (e: FormEvent) => {
+  e.preventDefault();
+
+  // Validation
+  if (!formData.customerName.trim()) {
+    alert("Customer name is required!");
+    return;
+  }
+
+  if (!formData.mobile.trim()) {
+    alert("Mobile number is required!");
+    return;
+  }
+
+  console.log("📋 Submitting form data:", formData);
+
+  const form = new FormData();
+
+  // Append JSON DATA
+  form.append("customerData", JSON.stringify(formData));
+
+  // Append HEALTH files
+  Object.entries(healthFiles).forEach(([index, files]) => {
+    files.forEach((file) => {
+      form.append(`health_${index}`, file);
+    });
+  });
+
+  // Append VEHICLE files
+  Object.entries(vehicleFiles).forEach(([index, files]) => {
+    files.forEach((file) => {
+      form.append(`vehicle_${index}`, file);
+    });
+  });
+
+  // Debug logs
+  console.log("📦 Sending FormData with entries:");
+  for (let [key, value] of form.entries()) {
+    if (value instanceof File) {
+      console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`);
+    } else {
+      console.log(`  ${key}:`, value);
+    }
+  }
+
+  try {
+  const res = await Axios.post("/api/customers", form, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  });
+
+  console.log("✅ Customer saved successfully:", res.data);
+  alert("Customer saved successfully!");
+  navigate("/home");
+  } catch (error: any) {
+    console.error("❌ Error submitting form:", error);
+    
+    if (error.response) {
+      console.error("❌ Server responded with:", error.response.data);
+      alert(error.response.data.message || "Server error occurred");
+    } else if (error.request) {
+      console.error("❌ No response from server");
+      alert("Cannot connect to server. Please check if backend is running.");
+    } else {
+      console.error("❌ Error:", error.message);
+      alert("An error occurred: " + error.message);
+    }
+  }
+};
   return (
     <div className="form-container">
       <h2>Customer Details Form</h2>
@@ -349,6 +440,13 @@ const handleHealthDetailChange = (
                     handleHealthDetailChange(index, "expiry", e.target.value)
                   }
                 />
+                {/* ⭐ NEW File Upload */}
+                <label>Upload Health Files</label>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) => handleHealthFileChange(index, e)}
+                />
               </div>
             ))}
           </div>
@@ -399,6 +497,13 @@ const handleHealthDetailChange = (
                       handleVehicleDetailChange(index,"policyExpiry",e.target.value)
                     }
                   />
+                  {/* ⭐ NEW File Upload */}
+                <label>Upload Vehicle Files</label>
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) => handleVehicleFileChange(index, e)}
+                />
                 </div>
               ))}
             </div>
